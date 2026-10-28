@@ -148,7 +148,7 @@ The root endpoint `/` returns a JSON message confirming that the Furniture Shop 
 Configure the frontend environment variable:
 
 ```env
-VITE_API_URL=https://your-backend-url.onrender.com/api
+VITE_API_URL=https://your-render.com/api
 ```
 
 The `/api` prefix is required because the Express application mounts its route groups under `/api`.
