@@ -23,6 +23,7 @@ router.put("/:id/cancel", cancelOrder);
 // Admin routes — keep these before /:id
 router.get("/admin/all", adminMiddleware, getAllOrders);
 router.put("/admin/:id/status", adminMiddleware, updateOrderStatus);
+router.put("/admin/:id/payment-status", adminMiddleware, updatePaymentStatus);
 
 // Get a specific order belonging to the logged-in user
 router.get("/:id", getOrderById);
