@@ -329,6 +329,62 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+const updatePaymentStatus = async (req, res) => {
+  try {
+    const { paymentStatus } = req.body;
+
+    const allowedStatuses = [
+      "pending",
+      "paid",
+      "failed",
+      "refunded",
+    ];
+
+    if (!allowedStatuses.includes(paymentStatus)) {
+      return res.status(400).json({
+        message: "Invalid payment status",
+      });
+    }
+
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found",
+      });
+    }
+
+    // Prevent marking a cancelled order as paid.
+    if (
+      order.orderStatus === "cancelled" &&
+      paymentStatus === "paid"
+    ) {
+      return res.status(400).json({
+        message: "A cancelled order cannot be marked as paid",
+      });
+    }
+
+    order.paymentStatus = paymentStatus;
+    await order.save();
+
+    return res.status(200).json({
+      message: "Payment status updated successfully",
+      order,
+    });
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        message: "Invalid order ID",
+      });
+    }
+
+    return res.status(500).json({
+      message: "Failed to update payment status",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getMyOrders,
@@ -336,4 +392,5 @@ module.exports = {
   cancelOrder,
   getAllOrders,
   updateOrderStatus,
+  updatePaymentStatus
 };
