@@ -12,10 +12,33 @@ const app = express();
 connectDB();
 
 // Middleware
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+]
+  .filter(Boolean)
+  .map((url) => url.replace(/\/+$/, ""));
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-  }),
+    origin: (origin, callback) => {
+      // Allow requests without an Origin header, such as server-to-server calls.
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const normalizedOrigin = origin.replace(/\/+$/, "");
+
+      if (allowedOrigins.includes(normalizedOrigin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked origin: ${origin}`));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
 );
 
 app.use(express.json());
@@ -30,13 +53,15 @@ const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 
-// API routes
+// Health check
 app.get("/", (req, res) => {
   res.status(200).json({
-    message: "Furniture Shop API is running",
+    success: true,
+    message: "Furnispace API is running",
   });
 });
 
+// API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/categories", categoryRoutes);
@@ -45,8 +70,11 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/reviews", reviewRoutes);
 
-// Error-handling middleware (must come after all routes)
-const { notFound, errorHandler } = require("./middleware/errorMiddleware");
+// Error-handling middleware (must come after routes)
+const {
+  notFound,
+  errorHandler,
+} = require("./middleware/errorMiddleware");
 
 app.use(notFound);
 app.use(errorHandler);
@@ -55,5 +83,5 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Furnispace server running on port ${PORT}`);
 });
